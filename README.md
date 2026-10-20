@@ -35,9 +35,9 @@
 
 ## 3. 🌐 배포 URL (Deployment Links)
 
-- **프론트엔드 웹 서비스 URL (Vercel)**: `https://<your-project>.vercel.app`
-- **백엔드 API 서버 URL (Render)**: `https://<your-backend>.onrender.com`
-- **대화형 Swagger API 문서**: `https://<your-backend>.onrender.com/docs`
+- **프론트엔드 웹 서비스 URL (Vercel)**: `https://<your-project>.vercel.app` (Vercel 배포 후 기재)
+- **백엔드 API 서버 URL (Render)**: https://m1-2-7jmb.onrender.com
+- **대화형 Swagger API 문서**: https://m1-2-7jmb.onrender.com/docs
 
 > ⚠️ **Render 무료 티어 안내**:  
 > 무료 플랜 특성상 15분간 요청이 없을 시 인스턴스가 슬립 모드(Cold Start)에 들어갑니다. 첫 접속 시 서버가 깨어나는 데 약 30~50초 정도 소요될 수 있으며, 프론트엔드 상단 상태 배지에 로딩 안내가 표시됩니다.

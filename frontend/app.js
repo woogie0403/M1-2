@@ -4,11 +4,11 @@
  * - REST API Integration with FastAPI Backend
  */
 
-// 1. API Base URL 동적 감지 (로컬 localhost:8000 기본 지원)
+// 1. API Base URL 동적 감지 (로컬 개발 및 Render 프로덕션 자동 매핑)
 const API_BASE_URL = window.API_BASE_URL ||
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000'
-    : 'https://k-boxoffice-backend.onrender.com'); // 배포 시 기본 백엔드 주소
+    : 'https://m1-2-7jmb.onrender.com'); // 실제 배포된 Render 백엔드 주소
 
 // 전역 상태 관리
 let currentConversationId = null;
