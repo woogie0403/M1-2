@@ -28,3 +28,4 @@ Thumbs.db
 *.pdf
 AI Agent 개발_나만의 AI 비서 구축.pdf
 .agents/
+build_study_guide.py
