@@ -97,7 +97,13 @@
         <div id="tabData" class="tab-content">
           <div class="panel-header">
             <h3>박스오피스 데이터 (CRUD)</h3>
-            <button id="openAddModalBtn" class="btn btn-primary btn-sm">+ 데이터 추가</button>
+            <span id="dataCountBadge" class="status-badge online">로딩 중...</span>
+          </div>
+
+          <!-- 실시간 검색 및 필터 -->
+          <div class="filter-bar">
+            <input type="text" id="dataSearchInput" placeholder="🔍 날짜(예: 2024-12) 또는 영화명(파묘) 검색..." autocomplete="off">
+            <button id="resetSearchBtn" class="btn btn-secondary btn-sm" title="검색 초기화">초기화</button>
           </div>
 
           <!-- 간이 추가 폼 -->
@@ -135,6 +141,16 @@
         <div id="tabChart" class="tab-content">
           <div class="panel-header">
             <h3>주요 시계열 추이 분석</h3>
+            <select id="chartPeriodSelect" class="chart-select">
+              <option value="recent30">최근 30일 추이</option>
+              <option value="2024-H1">2024년 상반기 (1~6월)</option>
+              <option value="2024-H2">2024년 하반기 (7~12월)</option>
+              <option value="2024">2024년 전체 (366일)</option>
+              <option value="2025-H1">2025년 상반기 (1~6월)</option>
+              <option value="2025-H2">2025년 하반기 (7~12월)</option>
+              <option value="2025">2025년 전체 (365일)</option>
+              <option value="all">전체 기간 (731일 총합)</option>
+            </select>
           </div>
           <div class="chart-wrapper">
             <canvas id="boxofficeChart"></canvas>

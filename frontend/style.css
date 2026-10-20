@@ -664,8 +664,36 @@ body {
   border-radius: var(--radius-sm);
 }
 
-.btn-icon:hover {
-  background-color: var(--bg-sidebar);
+.chart-select {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.filter-bar input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+}
+
+.filter-bar input:focus {
+  border-color: var(--primary-color);
 }
 
 /* Modal */

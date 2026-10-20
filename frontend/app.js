@@ -13,6 +13,7 @@ const API_BASE_URL = window.API_BASE_URL ||
 // 전역 상태 관리
 let currentConversationId = null;
 let boxofficeChartInstance = null;
+let allDataItems = []; // 전체 731일 박스오피스 데이터 저장
 
 // DOM 요소 참조
 const serverStatusBadge = document.getElementById('serverStatusBadge');
@@ -31,11 +32,16 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 const newChatBtn = document.getElementById('newChatBtn');
 const conversationList = document.getElementById('conversationList');
 
+const dataCountBadge = document.getElementById('dataCountBadge');
+const dataSearchInput = document.getElementById('dataSearchInput');
+const resetSearchBtn = document.getElementById('resetSearchBtn');
 const dataTableBody = document.getElementById('dataTableBody');
 const addDataForm = document.getElementById('addDataForm');
 const inputDate = document.getElementById('inputDate');
 const inputValue = document.getElementById('inputValue');
 const inputMemo = document.getElementById('inputMemo');
+
+const chartPeriodSelect = document.getElementById('chartPeriodSelect');
 
 const editModal = document.getElementById('editModal');
 const editDataForm = document.getElementById('editDataForm');
@@ -274,56 +280,100 @@ async function deleteConversation(convId) {
 }
 
 // ==========================================================
-// 5. 데이터 관리 (CRUD)
+// 5. 데이터 관리 (CRUD) 및 실시간 검색 필터
 // ==========================================================
 async function loadDataTable() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/data?limit=50`);
+    if (dataCountBadge) dataCountBadge.textContent = '데이터 동기화 중...';
+    const res = await fetch(`${API_BASE_URL}/api/data`);
     if (!res.ok) throw new Error('데이터 목록 로드 실패');
-    const items = await res.json();
+    allDataItems = await res.json();
 
-    dataTableBody.innerHTML = '';
-    if (items.length === 0) {
-      dataTableBody.innerHTML = '<tr><td colspan="4" class="text-center">등록된 데이터가 없습니다.</td></tr>';
-      return;
+    // 날짜 기준 오름차순 정렬 보장
+    allDataItems.sort((a, b) => (a.date > b.date ? 1 : -1));
+
+    renderFilteredTable();
+    renderChart();
+  } catch (err) {
+    console.error('데이터 로드 오류:', err);
+    dataTableBody.innerHTML = '<tr><td colspan="4" class="text-center">데이터 로드 오류</td></tr>';
+    if (dataCountBadge) dataCountBadge.textContent = '오류';
+  }
+}
+
+// 실시간 검색 필터링 렌더러
+function renderFilteredTable() {
+  const query = dataSearchInput ? dataSearchInput.value.trim().toLowerCase() : '';
+  const filtered = query
+    ? allDataItems.filter(item =>
+        (item.date && item.date.toLowerCase().includes(query)) ||
+        (item.memo && item.memo.toLowerCase().includes(query))
+      )
+    : allDataItems;
+
+  if (dataCountBadge) {
+    if (query) {
+      dataCountBadge.textContent = `${filtered.length.toLocaleString()}개 검색됨 / 전체 ${allDataItems.length.toLocaleString()}개`;
+    } else {
+      dataCountBadge.textContent = `전체 ${allDataItems.length.toLocaleString()}개 등록됨`;
     }
+  }
 
-    items.forEach(item => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${item.date}</strong></td>
-        <td>${Number(item.value).toLocaleString()}</td>
-        <td>${escapeHtml(item.memo || '-')}</td>
-        <td>
-          <div class="action-btns">
-            <button class="btn-table btn-edit" data-id="${item.id}" data-date="${item.date}" data-value="${item.value}" data-memo="${escapeHtml(item.memo || '')}">수정</button>
-            <button class="btn-table danger btn-delete" data-id="${item.id}">삭제</button>
-          </div>
-        </td>
-      `;
+  dataTableBody.innerHTML = '';
+  if (filtered.length === 0) {
+    dataTableBody.innerHTML = '<tr><td colspan="4" class="text-center">일치하는 박스오피스 데이터가 없습니다.</td></tr>';
+    return;
+  }
 
-      // 수정 버튼
-      tr.querySelector('.btn-edit').addEventListener('click', (e) => {
-        const btn = e.currentTarget;
-        openEditModal(btn.dataset.id, btn.dataset.date, btn.dataset.value, btn.dataset.memo);
-      });
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${item.date}</strong></td>
+      <td>${Number(item.value).toLocaleString()}</td>
+      <td>${escapeHtml(item.memo || '-')}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-table btn-edit" data-id="${item.id}" data-date="${item.date}" data-value="${item.value}" data-memo="${escapeHtml(item.memo || '')}">수정</button>
+          <button class="btn-table danger btn-delete" data-id="${item.id}">삭제</button>
+        </div>
+      </td>
+    `;
 
-      // 삭제 버튼
-      tr.querySelector('.btn-delete').addEventListener('click', async (e) => {
-        const id = e.currentTarget.dataset.id;
-        if (confirm(`${item.date} 데이터를 삭제하시겠습니까?`)) {
-          await deleteData(id);
-        }
-      });
-
-      dataTableBody.appendChild(tr);
+    // 수정 버튼
+    tr.querySelector('.btn-edit').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      openEditModal(btn.dataset.id, btn.dataset.date, btn.dataset.value, btn.dataset.memo);
     });
 
-    // 차트 데이터 갱신
-    renderChart(items);
-  } catch (err) {
-    dataTableBody.innerHTML = '<tr><td colspan="4" class="text-center">데이터 로드 오류</td></tr>';
-  }
+    // 삭제 버튼
+    tr.querySelector('.btn-delete').addEventListener('click', async (e) => {
+      const id = e.currentTarget.dataset.id;
+      if (confirm(`${item.date} 데이터를 삭제하시겠습니까?`)) {
+        await deleteData(id);
+      }
+    });
+
+    fragment.appendChild(tr);
+  });
+
+  dataTableBody.appendChild(fragment);
+}
+
+// 검색 이벤트 리스너
+if (dataSearchInput) {
+  dataSearchInput.addEventListener('input', () => {
+    renderFilteredTable();
+  });
+}
+
+if (resetSearchBtn) {
+  resetSearchBtn.addEventListener('click', () => {
+    if (dataSearchInput) {
+      dataSearchInput.value = '';
+      renderFilteredTable();
+    }
+  });
 }
 
 // 새 데이터 추가
@@ -406,20 +456,57 @@ async function deleteData(id) {
 }
 
 // ==========================================================
-// 6. 보너스 기능: 시각화 차트 (Chart.js)
+// 6. 보너스 기능: 시각화 차트 (Chart.js 기간별 필터링)
 // ==========================================================
-function renderChart(items) {
-  const ctx = document.getElementById('boxofficeChart');
-  if (!ctx || typeof Chart === 'undefined') return;
+if (chartPeriodSelect) {
+  chartPeriodSelect.addEventListener('change', () => {
+    renderChart();
+  });
+}
 
-  // 최근 30개 데이터 역순 정렬
-  const displayItems = [...items].slice(0, 30);
-  const labels = displayItems.map(d => d.date);
-  const values = displayItems.map(d => d.value);
+function renderChart() {
+  const ctx = document.getElementById('boxofficeChart');
+  if (!ctx || typeof Chart === 'undefined' || allDataItems.length === 0) return;
+
+  const period = chartPeriodSelect ? chartPeriodSelect.value : 'recent30';
+  let targetItems = [];
+
+  switch (period) {
+    case 'recent30':
+      targetItems = allDataItems.slice(-30);
+      break;
+    case '2024-H1':
+      targetItems = allDataItems.filter(d => d.date >= '2024-01-01' && d.date <= '2024-06-30');
+      break;
+    case '2024-H2':
+      targetItems = allDataItems.filter(d => d.date >= '2024-07-01' && d.date <= '2024-12-31');
+      break;
+    case '2024':
+      targetItems = allDataItems.filter(d => d.date && d.date.startsWith('2024'));
+      break;
+    case '2025-H1':
+      targetItems = allDataItems.filter(d => d.date >= '2025-01-01' && d.date <= '2025-06-30');
+      break;
+    case '2025-H2':
+      targetItems = allDataItems.filter(d => d.date >= '2025-07-01' && d.date <= '2025-12-31');
+      break;
+    case '2025':
+      targetItems = allDataItems.filter(d => d.date && d.date.startsWith('2025'));
+      break;
+    case 'all':
+    default:
+      targetItems = allDataItems;
+      break;
+  }
+
+  const labels = targetItems.map(d => d.date);
+  const values = targetItems.map(d => d.value);
 
   if (boxofficeChartInstance) {
     boxofficeChartInstance.destroy();
   }
+
+  const pointRadius = targetItems.length > 50 ? 0 : 3;
 
   boxofficeChartInstance = new Chart(ctx, {
     type: 'line',
@@ -430,17 +517,37 @@ function renderChart(items) {
         data: values,
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.3,
-        fill: true
+        tension: 0.25,
+        fill: true,
+        pointRadius: pointRadius,
+        borderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const item = targetItems[context.dataIndex];
+              const memoStr = item && item.memo ? ` (${item.memo})` : '';
+              return `관객수: ${Number(context.raw).toLocaleString()}명${memoStr}`;
+            }
+          }
+        }
       },
       scales: {
+        x: {
+          ticks: {
+            maxTicksLimit: 12
+          }
+        },
         y: {
           ticks: {
             callback: (val) => `${(val / 10000).toFixed(0)}만`
