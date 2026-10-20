@@ -11,7 +11,7 @@ class Settings:
     # Gemini API 설정
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_BASE_URL: str = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
-    AI_MODEL: str = os.getenv("AI_MODEL", "gemini-3.8-flash")
+    AI_MODEL: str = os.getenv("AI_MODEL", "gemini-3.5-flash-lite")
 
     # (대체용) OpenAI 설정
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
