@@ -24,13 +24,16 @@ for pkg in packages:
         print(f"[FAIL] {pkg}: Import Error - {e}")
 
 print("-" * 50)
+gemini_key = os.getenv("GEMINI_API_KEY")
 openai_key = os.getenv("OPENAI_API_KEY")
 firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY") or os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 
-if openai_key and not openai_key.startswith("your_"):
+if gemini_key and not gemini_key.startswith("your_"):
+    print(f"[INFO] GEMINI_API_KEY: 설정됨 (앞 8자리: {gemini_key[:8]}...)")
+elif openai_key and not openai_key.startswith("your_"):
     print(f"[INFO] OPENAI_API_KEY: 설정됨 (앞 8자리: {openai_key[:8]}...)")
 else:
-    print("[WARN] OPENAI_API_KEY: 아직 설정되지 않음 (.env 파일에 입력 필요)")
+    print("[WARN] AI API KEY: 아직 설정되지 않음 (.env 파일 확인 필요)")
 
 if firebase_key:
     if os.path.exists(firebase_key):
