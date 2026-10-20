@@ -94,15 +94,18 @@ $env:PYTHONPATH="backend"
 
 ### 1) 데이터 요약이 보이는 AI 채팅 화면
 - 상단의 4개 요약 카드(집계 기간, 총 누적 관객 2.14억 명, 일평균 29.3만 명, 트렌드)와 함께, AI 비서가 내 박스오피스 데이터를 인용하여 맞춤형 답변을 제공하는 화면입니다.
-- *(캡처 이미지 위치: `docs/screenshots/01_chat_summary.png`)*
+
+![01_chat_summary](docs/screenshots/01_chat_summary.png)
 
 ### 2) 데이터 관리 화면 (CRUD 동작)
-- 731개의 일별 박스오피스 데이터 테이블 목록이 표시되고, 새 데이터를 등록하거나 기존 데이터를 수정/삭제하는 동작 화면입니다.
-- *(캡처 이미지 위치: `docs/screenshots/02_data_crud.png`)*
+- 731개의 일별 박스오피스 데이터 테이블 목록이 표시되고, 기존 데이터를 수정/삭제하거나 신규 데이터를 등록하는 모달 인터랙션 화면입니다.
+
+![02_data_crud](docs/screenshots/02_data_crud.png)
 
 ### 3) 대화 기록 화면 (대화 불러오기 동작)
-- 좌측 사이드바의 "💬 대화 기록" 탭에 이전 대화 목록이 누적 표시되고, 특정 대화를 클릭하여 과거 주고받은 메시지들이 채팅창에 완벽히 복원되는 화면입니다.
-- *(캡처 이미지 위치: `docs/screenshots/03_conversation_history.png`)*
+- 좌측 사이드바의 "💬 대화 기록" 탭에 이전 대화 세션들이 누적 관리되며, 특정 대화를 클릭하여 과거 주고받은 메시지들이 채팅창에 완벽히 복원되는 화면입니다.
+
+![03_conversation_history](docs/screenshots/03_conversation_history.png)
 
 ---
 
