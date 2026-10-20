@@ -23,3 +23,8 @@ credentials.json
 Thumbs.db
 .vscode/
 .idea/
+
+# Assignment PDF & Docs
+*.pdf
+AI Agent 개발_나만의 AI 비서 구축.pdf
+.agents/
