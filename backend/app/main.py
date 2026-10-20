@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_firebase
 from app.routers import data as data_router
@@ -35,6 +37,7 @@ def health_check():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "ai_model": settings.ACTIVE_MODEL,
+        "web_app": "/app/",
         "docs": "/docs"
     }
 
@@ -42,3 +45,12 @@ def health_check():
 app.include_router(data_router.router, prefix="/api/data", tags=["Data CRUD & Summary"])
 app.include_router(conv_router.router, prefix="/api/conversations", tags=["Conversations"])
 app.include_router(chat_router.router, prefix="/api/chat", tags=["AI Chatbot"])
+
+# 로컬 브라우저용 정적 프론트엔드 서빙 (/app)
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
+if not os.path.exists(frontend_path):
+    frontend_path = os.path.join(os.getcwd(), "frontend")
+
+if os.path.exists(frontend_path):
+    app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="frontend")
+

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K-BoxOffice AI Assistant | 박스오피스 시계열 분석 AI 비서</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js (보너스 과제: 시각화 차트용 가벼운 CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="light-mode">
+  <div class="app-container">
+    <!-- 1. Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">🎬</span>
+        <div>
+          <h1>K-BoxOffice AI Assistant</h1>
+          <p class="subtitle">2024~2025 대한민국 영화 박스오피스 시계열 분석 비서</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="serverStatusBadge" class="status-badge connecting">
+          <span class="status-dot"></span>
+          <span id="serverStatusText">서버 연결 확인 중...</span>
+        </div>
+        <button id="exportCsvBtn" class="btn btn-secondary btn-sm" title="시계열 데이터 CSV 다운로드">
+          📥 CSV 내보내기
+        </button>
+        <button id="themeToggleBtn" class="btn btn-icon" title="다크 모드 토글">
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. 데이터 요약 카드 (과제 필수 영역: Summary Dashboard) -->
+    <section class="summary-section">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="card-icon">📅</div>
+          <div class="card-content">
+            <span class="card-label">집계 기간 (Period)</span>
+            <span id="summaryPeriod" class="card-value">-</span>
+            <span id="summaryCount" class="card-sub">-건의 일별 데이터</span>
+          </div>
+        </div>
+        <div class="summary-card highlight-blue">
+          <div class="card-icon">👥</div>
+          <div class="card-content">
+            <span class="card-label">총 누적 관객수 (Total)</span>
+            <span id="summaryTotal" class="card-value">-</span>
+            <span class="card-sub">2024-2025 극장가 총합</span>
+          </div>
+        </div>
+        <div class="summary-card highlight-green">
+          <div class="card-icon">📊</div>
+          <div class="card-content">
+            <span class="card-label">일평균 관객수 (Average)</span>
+            <span id="summaryAvg" class="card-value">-</span>
+            <span id="summaryMinMax" class="card-sub">최고: - / 최저: -</span>
+          </div>
+        </div>
+        <div class="summary-card highlight-purple">
+          <div class="card-icon">📈</div>
+          <div class="card-content">
+            <span class="card-label">최근 추세 진단 (Trend)</span>
+            <span id="summaryTrend" class="card-value trend-badge">-</span>
+            <span class="card-sub">전반기 대비 후반기 성장률 분석</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 메인 콘텐츠 (좌측 사이드바: 대화목록/데이터관리, 우측: AI 채팅창) -->
+    <main class="main-layout">
+      <!-- 좌측: 사이드바 -->
+      <aside class="sidebar-panel">
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+          <button id="tabConversationsBtn" class="tab-btn active">💬 대화 기록</button>
+          <button id="tabDataBtn" class="tab-btn">📋 데이터 관리 (CRUD)</button>
+          <button id="tabChartBtn" class="tab-btn">📉 관객 추이 차트</button>
+        </div>
+
+        <!-- 탭 1: 대화 기록 (Conversations) -->
+        <div id="tabConversations" class="tab-content active">
+          <div class="panel-header">
+            <h3>이전 대화 목록</h3>
+            <button id="newChatBtn" class="btn btn-primary btn-sm">+ 새 대화</button>
+          </div>
+          <ul id="conversationList" class="conversation-list">
+            <li class="empty-state">저장된 대화 기록을 불러오는 중...</li>
+          </ul>
+        </div>
+
+        <!-- 탭 2: 데이터 관리 (CRUD) -->
+        <div id="tabData" class="tab-content">
+          <div class="panel-header">
+            <h3>박스오피스 데이터 (CRUD)</h3>
+            <button id="openAddModalBtn" class="btn btn-primary btn-sm">+ 데이터 추가</button>
+          </div>
+
+          <!-- 간이 추가 폼 -->
+          <form id="addDataForm" class="add-data-form">
+            <h4>새 데이터 등록</h4>
+            <div class="form-row">
+              <input type="date" id="inputDate" required>
+              <input type="number" id="inputValue" placeholder="일일 관객수" required min="0">
+            </div>
+            <div class="form-row">
+              <input type="text" id="inputMemo" placeholder="1위 영화 및 메모 (예: 1위: 파묘)">
+              <button type="submit" class="btn btn-primary btn-sm">저장</button>
+            </div>
+          </form>
+
+          <!-- 데이터 테이블 -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>관객수(명)</th>
+                  <th>1위 영화 / 메모</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody">
+                <tr><td colspan="4" class="text-center">데이터 로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 탭 3: 관객 추이 차트 (보너스 과제) -->
+        <div id="tabChart" class="tab-content">
+          <div class="panel-header">
+            <h3>주요 시계열 추이 분석</h3>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="boxofficeChart"></canvas>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 우측: AI 채팅 인터페이스 (과제 핵심) -->
+      <section class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-title">
+            <span class="bot-avatar">🤖</span>
+            <div>
+              <h3>K-BoxOffice AI 비서</h3>
+              <p class="chat-status">내 박스오피스 데이터를 기억하고 맞춤형 브리핑을 제공합니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 대화 메시지 영역 -->
+        <div id="chatMessages" class="chat-messages">
+          <div class="message bot-message">
+            <div class="message-avatar">🤖</div>
+            <div class="message-body">
+              <div class="message-author">K-BoxOffice AI</div>
+              <div class="message-text">
+                안녕하세요! 2024~2025 대한민국 박스오피스 전문 분석 AI 비서입니다. 🎬<br>
+                총 <strong>2억 1,420만 명</strong>의 누적 관객과 <strong>731일</strong>간의 일별 박스오피스 실적 데이터를 기억하고 있습니다.<br><br>
+                궁금하신 점이 있다면 아래 질문을 클릭하시거나 직접 입력해 보세요!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 추천 질문 (Quick Prompts) -->
+        <div class="quick-prompts">
+          <button class="prompt-chip" data-question="2024~2025년 총 누적 관객수와 일일 평균 관객수를 알려줘">
+            📊 전체 관객 통계 요약
+          </button>
+          <button class="prompt-chip" data-question="가장 관객이 많았던 날의 기록과 1위 영화는 뭐야?">
+            🏆 역대 최고 흥행일 조회
+          </button>
+          <button class="prompt-chip" data-question="최근 박스오피스 추세와 성장률 트렌드는 어때?">
+            📈 최근 흥행 추세 진단
+          </button>
+        </div>
+
+        <!-- 로딩 인디케이터 (과제 필수 요구사항: 로딩 표시) -->
+        <div id="loadingIndicator" class="loading-indicator hidden">
+          <div class="spinner"></div>
+          <span>AI가 시계열 데이터를 분석하여 답변을 작성하고 있습니다...</span>
+        </div>
+
+        <!-- 채팅 입력 폼 -->
+        <form id="chatForm" class="chat-input-area">
+          <input
+            type="text"
+            id="chatInput"
+            placeholder="박스오피스 데이터에 대해 질문해 보세요 (예: 2024년 최고 관객수는?)"
+            autocomplete="off"
+            required
+          >
+          <button type="submit" id="sendBtn" class="btn btn-primary">
+            전송 🚀
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <!-- 데이터 수정 모달 -->
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>데이터 수정</h3>
+          <button id="closeModalBtn" class="btn-close">&times;</button>
+        </div>
+        <form id="editDataForm">
+          <input type="hidden" id="editId">
+          <div class="form-group">
+            <label for="editDate">날짜</label>
+            <input type="date" id="editDate" required>
+          </div>
+          <div class="form-group">
+            <label for="editValue">관객수(명)</label>
+            <input type="number" id="editValue" required min="0">
+          </div>
+          <div class="form-group">
+            <label for="editMemo">1위 영화 / 메모</label>
+            <input type="text" id="editMemo">
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancelEditBtn" class="btn btn-secondary">취소</button>
+            <button type="submit" class="btn btn-primary">수정 완료</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
