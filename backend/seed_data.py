@@ -1,6 +1,6 @@
+import csv
 import json
-import random
-from datetime import datetime, timedelta
+import os
 import sys
 
 if sys.platform == "win32":
@@ -11,66 +11,50 @@ if sys.platform == "win32":
 
 from app.services.summary_service import calculate_summary
 
-def generate_sample_dataset(days: int = 120) -> list:
+def load_and_convert_boxoffice_data(csv_path: str = None) -> list:
     """
-    최근 120일간의 일별 비즈니스 매출/실적 시계열 데이터를 현실적으로 생성합니다.
-    (기본 상승 트렌드 + 요일별 변동성 + 이벤트성 메모 반영)
+    M1-1의 실제 KOBIS 일별 박스오피스 시계열 데이터(2024-2025)를 읽어와
+    M1-2 과제 표준 형식 (date, value, memo)으로 변환합니다.
     """
-    base_date = datetime.now() - timedelta(days=days)
+    if csv_path is None:
+        local_csv = os.path.join(os.path.dirname(__file__), "data", "daily_boxoffice_2024_2025.csv")
+        if os.path.exists(local_csv):
+            csv_path = local_csv
+        else:
+            csv_path = r"C:\Users\Jaeuk\Desktop\M1-1\data\daily_boxoffice_2024_2025.csv"
+
     records = []
-    base_value = 250000  # 기본 일매출 25만원 선
+    with open(csv_path, "r", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            date_str = row.get("date", "").strip()
+            total_audi = int(row.get("total_audi", 0))
+            top_movie = row.get("top_movie", "").strip()
+            top1_share = float(row.get("top1_share", 0.0))
 
-    memos = [
-        "정기 프로모션 진행",
-        "SNS 바이럴 광고 집행",
-        "주말 주문량 급증",
-        "신제품 런칭 이벤트",
-        "재고 일시 품절로 인한 보합",
-        "인플루언서 협업 리뷰 업로드",
-        "평일 기본 주문 유지",
-        "시즌 세일 오픈",
-        "충성 고객 감사 쿠폰 발급",
-        "시스템 점검 및 배송 마감"
-    ]
+            memo = f"1위: {top_movie} (점유율 {top1_share:.1f}%)"
 
-    random.seed(42)  # 재현성을 위한 시드 고정
-
-    for i in range(days):
-        current_date = base_date + timedelta(days=i)
-        date_str = current_date.strftime("%Y-%m-%d")
-
-        # 전반부에서 후반부로 갈수록 완만하게 성장하는 현실적 추세 모델링
-        growth_trend = i * 2000
-        # 주말(토/일) 효과: 1.3배
-        is_weekend = current_date.weekday() >= 5
-        weekend_boost = 1.35 if is_weekend else 1.0
-
-        noise = random.randint(-40000, 60000)
-        daily_val = int((base_value + growth_trend + noise) * weekend_boost)
-        daily_val = max(100000, daily_val)  # 최소 10만원 보장
-
-        memo = random.choice(memos) if (i % 3 == 0 or daily_val > 450000) else "일반 정기 배송"
-
-        records.append({
-            "date": date_str,
-            "value": daily_val,
-            "memo": memo
-        })
+            records.append({
+                "date": date_str,
+                "value": total_audi,
+                "memo": memo
+            })
 
     return records
 
 if __name__ == "__main__":
-    data = generate_sample_dataset(120)
+    records = load_and_convert_boxoffice_data()
     
-    # JSON 파일로 저장
-    with open("backend/seed_data.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    # backend/seed_data.json 파일로 저장
+    out_path = os.path.join(os.path.dirname(__file__), "seed_data.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, indent=2)
 
-    print(f"[성공] 120개의 시계열 샘플 데이터 생성 완료 -> backend/seed_data.json")
+    print(f"[성공] 실제 박스오피스 {len(records)}개 시계열 데이터 변환 완료 -> {out_path}")
 
-    # 요약 통계 엔진 테스트
-    summary = calculate_summary(data)
+    # 요약 통계 계산 및 출력
+    summary = calculate_summary(records)
     print("\n" + "=" * 50)
-    print("[데이터 요약 엔진(calculate_summary) 테스트 결과]")
+    print("[K-BoxOffice AI 데이터 요약 결과]")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     print("=" * 50)
