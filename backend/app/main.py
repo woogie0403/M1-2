@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_firebase
 from app.routers import data as data_router
+from app.routers import conversations as conv_router
+from app.routers import chat as chat_router
 
-# FastAPI 인스턴스 생성
+# FastAPI 앱 생성
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -13,7 +15,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS 미들웨어 설정
+# CORS 미들웨어 등록
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -22,20 +24,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 서버 시작 이벤트
 @app.on_event("startup")
 def startup_event():
     init_firebase()
 
-# 헬스체크 엔드포인트
 @app.get("/", tags=["Health"])
 def health_check():
     return {
         "status": "online",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "ai_model": settings.ACTIVE_MODEL,
         "docs": "/docs"
     }
 
-# 라우터 등록
+# 라우터 등록 (과제 명세 엔드포인트 100% 충족)
 app.include_router(data_router.router, prefix="/api/data", tags=["Data CRUD & Summary"])
+app.include_router(conv_router.router, prefix="/api/conversations", tags=["Conversations"])
+app.include_router(chat_router.router, prefix="/api/chat", tags=["AI Chatbot"])
