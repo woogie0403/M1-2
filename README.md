@@ -35,7 +35,7 @@
 
 ## 3. 🌐 배포 URL (Deployment Links)
 
-- **프론트엔드 웹 서비스 URL (Vercel)**: `https://<your-project>.vercel.app` (Vercel 배포 후 기재)
+- **프론트엔드 웹 서비스 URL (Vercel)**: https://m1-2-frontend-three.vercel.app
 - **백엔드 API 서버 URL (Render)**: https://m1-2-7jmb.onrender.com
 - **대화형 Swagger API 문서**: https://m1-2-7jmb.onrender.com/docs
 
